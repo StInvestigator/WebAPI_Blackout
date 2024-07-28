@@ -20,7 +20,7 @@ namespace WebAPI1.Controllers
         {
             try
             {
-                return ApiResponse<IEnumerable<Group>>.SuccessResponse(await _siteContext.Groups.Include(x => x.Schedule).ToListAsync());
+                return ApiResponse<IEnumerable<Group>>.SuccessResponse(await _siteContext.Groups.Include(x=>x.Schedule).ToListAsync());
             }
             catch(Exception ex)
             {
@@ -52,16 +52,20 @@ namespace WebAPI1.Controllers
         {
             try
             {
-                var model = (await _siteContext.Groups.ToListAsync()).Find(x=>x.Id==id);
+                var model = (await _siteContext.Groups.Include(x => x.Schedule).ToListAsync()).Find(x=>x.Id==id);
                 if (model == null) throw new Exception("Group was not found");
                 model.Name = group.Name;
                 if(group.Schedule.Count() != 0)
                 {
+                    foreach (var item in model.Schedule)
+                    {
+                        _siteContext.Remove(item);
+                    }
                     model.Schedule = group.Schedule;
                 }
                 await _siteContext.SaveChangesAsync();
 
-                return ApiResponse<Group>.SuccessResponse(group);
+                return ApiResponse<Group>.SuccessResponse(model);
             }
             catch (Exception ex)
             {
